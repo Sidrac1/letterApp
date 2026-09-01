@@ -15,11 +15,15 @@
         <h1 class="titulo-cursiva">Cartas para ti</h1>
         <p class="subtitulo">Cada una escrita pensando en nosotros.</p>
 
-        {% if not cartas %}
+        {% if error %}
+        <div class="aviso aviso-error">{{ error }}</div>
+        {% endif %}
+
+        {% if not cartas and not error %}
         <div class="estado-vacio">
             <p>Todavía no hay cartas aquí... pero pronto las habrá 💌</p>
         </div>
-        {% else %}
+        {% elif cartas %}
         <div class="lista-cartas">
             {% for carta in cartas %}
             <article class="tarjeta-carta" data-index="{{ loop.index }}">

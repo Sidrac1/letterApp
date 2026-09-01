@@ -1,59 +1,16 @@
 from flask import Flask, request, redirect, url_for, render_template
-import libsql
-import os
 from datetime import datetime
 from dotenv import load_dotenv
+import db
 
 load_dotenv()
 
 app = Flask(__name__)
 
-TURSO_DATABASE_URL = os.environ.get('TURSO_DATABASE_URL')
-TURSO_AUTH_TOKEN = os.environ.get('TURSO_AUTH_TOKEN')
-
-# ------------------------------------------------------------------
-# Usamos UNA sola conexión reutilizada durante toda la vida del proceso,
-# en vez de abrir y cerrar una conexión por cada request. Abrir/cerrar
-# conexiones de libsql repetidamente dentro de Flask provoca un deadlock
-# conocido en las librerías de Python de Turso:
-# https://github.com/tursodatabase/libsql-client-py/issues/30
-# ------------------------------------------------------------------
-_db_connection = None
-
-
-def _nueva_conexion():
-    return libsql.connect(database=TURSO_DATABASE_URL, auth_token=TURSO_AUTH_TOKEN)
-
-
-def get_db():
-    global _db_connection
-    if _db_connection is None:
-        _db_connection = _nueva_conexion()
-    return _db_connection
-
-
-def ejecutar(sql, params=()):
-    """Ejecuta una consulta y, si la conexión se cayó (por inactividad u
-    otro motivo), reconecta una vez y reintenta antes de fallar."""
-    global _db_connection
-    try:
-        db = get_db()
-        resultado = db.execute(sql, params)
-        db.commit()
-        return resultado
-    except Exception:
-        _db_connection = _nueva_conexion()
-        resultado = _db_connection.execute(sql, params)
-        _db_connection.commit()
-        return resultado
-
 
 def inicializar_db():
-    if not TURSO_DATABASE_URL or not TURSO_AUTH_TOKEN:
-        print('AVISO: faltan TURSO_DATABASE_URL o TURSO_AUTH_TOKEN en las variables de entorno.')
-        return
     try:
-        ejecutar('''
+        db.ejecutar('''
             CREATE TABLE IF NOT EXISTS cartas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 titulo TEXT NOT NULL,
@@ -98,7 +55,7 @@ def escribir_carta():
             creada_en = datetime.now().isoformat()
 
             try:
-                ejecutar(
+                db.ejecutar(
                     'INSERT INTO cartas (titulo, contenido, fecha, creada_en) VALUES (?, ?, ?, ?)',
                     (titulo_final, contenido, fecha, creada_en)
                 )
@@ -116,11 +73,17 @@ def escribir_carta():
 @app.route('/cartas')
 def ver_cartas():
     columnas = ['id', 'titulo', 'contenido', 'fecha', 'creada_en']
-    filas = ejecutar(
-        'SELECT id, titulo, contenido, fecha, creada_en FROM cartas ORDER BY fecha DESC, id DESC'
-    ).fetchall()
-    cartas = [dict(zip(columnas, fila)) for fila in filas]
-    return render_template('cartas.html', cartas=cartas)
+    error = None
+    cartas = []
+    try:
+        filas = db.ejecutar(
+            'SELECT id, titulo, contenido, fecha, creada_en FROM cartas ORDER BY fecha DESC, id DESC'
+        )
+        cartas = [dict(zip(columnas, fila)) for fila in filas]
+    except Exception as e:
+        error = f'No se pudieron cargar las cartas en este momento ({e})'
+
+    return render_template('cartas.html', cartas=cartas, error=error)
 
 
 if __name__ == '__main__':
