@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartas para ti 💕</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="pagina-cartas">
+    <div id="corazones-flotantes"></div>
+
+    <main class="contenedor-cartas">
+        <h1 class="titulo-cursiva">Cartas para ti</h1>
+        <p class="subtitulo">Cada una escrita pensando en nosotros.</p>
+
+        {% if not cartas %}
+        <div class="estado-vacio">
+            <p>Todavía no hay cartas aquí... pero pronto las habrá 💌</p>
+        </div>
+        {% else %}
+        <div class="lista-cartas">
+            {% for carta in cartas %}
+            <article class="tarjeta-carta" data-index="{{ loop.index }}">
+                <button class="encabezado-carta" type="button">
+                    <span class="fecha-carta">{{ carta.fecha }}</span>
+                    <span class="titulo-carta">{{ carta.titulo }}</span>
+                    <span class="icono-sobre">✉️</span>
+                </button>
+                <div class="cuerpo-carta">
+                    <p>{{ carta.contenido | replace('\n', '<br>') | safe }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

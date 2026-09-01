@@ -1,0 +1,249 @@
+:root {
+    --rosa-suave: #ffd9e8;
+    --rosa-medio: #f6a6c1;
+    --lavanda: #d9c9f0;
+    --vino: #7a2e4d;
+    --texto: #4a2e3b;
+    --blanco-calido: #fffaf9;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    color: var(--texto);
+    background: linear-gradient(160deg, var(--rosa-suave) 0%, var(--lavanda) 55%, #ffe3ef 100%);
+    background-attachment: fixed;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.titulo-cursiva {
+    font-family: 'Great Vibes', cursive;
+    font-size: 3rem;
+    color: var(--vino);
+    margin-bottom: 0.2rem;
+    text-align: center;
+}
+
+.subtitulo {
+    text-align: center;
+    color: var(--texto);
+    opacity: 0.75;
+    margin-top: 0;
+    margin-bottom: 2rem;
+    font-weight: 300;
+}
+
+/* ---------- Corazones flotantes de fondo ---------- */
+#corazones-flotantes {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.corazon-flotante {
+    position: absolute;
+    bottom: -10%;
+    font-size: 1.4rem;
+    opacity: 0.55;
+    animation: flotar linear infinite;
+    user-select: none;
+}
+
+@keyframes flotar {
+    0% {
+        transform: translateY(0) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(-110vh) translateX(20px) rotate(20deg);
+        opacity: 0;
+    }
+}
+
+/* ---------- Contenedores ---------- */
+.contenedor-escribir,
+.contenedor-cartas {
+    position: relative;
+    z-index: 1;
+    max-width: 640px;
+    margin: 4rem auto;
+    padding: 2.5rem 2rem 3rem;
+    background: rgba(255, 250, 249, 0.85);
+    border-radius: 24px;
+    box-shadow: 0 20px 45px rgba(122, 46, 77, 0.15);
+    backdrop-filter: blur(6px);
+}
+
+/* ---------- Formulario (escribir.html) ---------- */
+.formulario-carta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.formulario-carta label {
+    font-size: 0.85rem;
+    margin-top: 0.9rem;
+    color: var(--vino);
+    font-weight: 600;
+}
+
+.formulario-carta input,
+.formulario-carta textarea {
+    font-family: 'Poppins', sans-serif;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(122, 46, 77, 0.2);
+    background: var(--blanco-calido);
+    font-size: 1rem;
+    resize: vertical;
+    color: var(--texto);
+}
+
+.formulario-carta input:focus,
+.formulario-carta textarea:focus {
+    outline: none;
+    border-color: var(--rosa-medio);
+    box-shadow: 0 0 0 3px rgba(246, 166, 193, 0.35);
+}
+
+.boton-enviar {
+    margin-top: 1.6rem;
+    align-self: center;
+    padding: 0.8rem 2.2rem;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(120deg, var(--rosa-medio), var(--lavanda));
+    color: var(--blanco-calido);
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(246, 166, 193, 0.45);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.boton-enviar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 24px rgba(246, 166, 193, 0.55);
+}
+
+.aviso {
+    padding: 0.9rem 1.1rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.aviso-exito {
+    background: rgba(217, 201, 240, 0.5);
+    color: var(--vino);
+}
+
+.aviso-error {
+    background: rgba(255, 190, 190, 0.5);
+    color: #8a2b2b;
+}
+
+.enlace-sutil {
+    color: var(--vino);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* ---------- Lista de cartas (cartas.html) ---------- */
+.estado-vacio {
+    text-align: center;
+    color: var(--texto);
+    opacity: 0.7;
+    padding: 2rem 0;
+}
+
+.lista-cartas {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tarjeta-carta {
+    background: var(--blanco-calido);
+    border-radius: 16px;
+    box-shadow: 0 8px 18px rgba(122, 46, 77, 0.1);
+    overflow: hidden;
+    border: 1px solid rgba(246, 166, 193, 0.35);
+}
+
+.encabezado-carta {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem 1.2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Poppins', sans-serif;
+}
+
+.fecha-carta {
+    font-size: 0.75rem;
+    color: var(--rosa-medio);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.titulo-carta {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--vino);
+}
+
+.icono-sobre {
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+}
+
+.tarjeta-carta.abierta .icono-sobre {
+    transform: rotate(15deg) scale(1.1);
+}
+
+.cuerpo-carta {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 0 1.2rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--texto);
+}
+
+.tarjeta-carta.abierta .cuerpo-carta {
+    max-height: 800px;
+    padding: 0 1.2rem 1.3rem;
+}
+
+@media (max-width: 480px) {
+    .titulo-cursiva {
+        font-size: 2.2rem;
+    }
+
+    .contenedor-escribir,
+    .contenedor-cartas {
+        margin: 2rem 1rem;
+        padding: 1.8rem 1.2rem 2.2rem;
+    }
+}

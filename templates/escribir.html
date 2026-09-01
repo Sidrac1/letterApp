@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escribir una carta 💌</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="pagina-escribir">
+    <div id="corazones-flotantes"></div>
+
+    <main class="contenedor-escribir">
+        <h1 class="titulo-cursiva">Nueva carta para ella</h1>
+        <p class="subtitulo">Este espacio es solo tuyo. Escribe lo que sientas.</p>
+
+        {% if enviado %}
+        <div class="aviso aviso-exito">
+            Tu carta fue guardada con cariño ✨
+            <a href="{{ url_for('escribir_carta') }}" class="enlace-sutil">Escribir otra</a>
+            ·
+            <a href="{{ url_for('ver_cartas') }}" class="enlace-sutil">Ver todas las cartas</a>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="aviso aviso-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" class="formulario-carta">
+            <label for="titulo">Título (opcional)</label>
+            <input type="text" id="titulo" name="titulo" placeholder="Ej. Para cuando me extrañes">
+
+            <label for="fecha">Fecha (opcional, si la dejas vacía se usa hoy)</label>
+            <input type="date" id="fecha" name="fecha">
+
+            <label for="contenido">Tu carta</label>
+            <textarea id="contenido" name="contenido" rows="10" placeholder="Mi amor..." required></textarea>
+
+            <button type="submit" class="boton-enviar">Guardar carta 🤍</button>
+        </form>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
