@@ -1,24 +1,20 @@
 from flask import Flask, request, redirect, url_for, render_template, g
-import sqlite3
+import libsql
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# En local guarda cartas.db junto al código.
-# En Render, si montas un Disk persistente, apunta DATABASE_PATH a esa ruta
-# (ej. variable de entorno DATABASE_PATH=/var/data/cartas.db) para que las
-# cartas no se pierdan en cada redeploy.
-DATABASE_PATH = os.environ.get(
-    'DATABASE_PATH',
-    os.path.join(os.path.dirname(__file__), 'cartas.db')
-)
+TURSO_DATABASE_URL = os.environ.get('TURSO_DATABASE_URL')
+TURSO_AUTH_TOKEN = os.environ.get('TURSO_AUTH_TOKEN')
 
 
 def get_db():
     if 'db' not in g:
-        g.db = sqlite3.connect(DATABASE_PATH)
-        g.db.row_factory = sqlite3.Row
+        g.db = libsql.connect(database=TURSO_DATABASE_URL, auth_token=TURSO_AUTH_TOKEN)
     return g.db
 
 
@@ -30,13 +26,7 @@ def cerrar_db(exception=None):
 
 
 def inicializar_db():
-    # Crea la carpeta contenedora si no existe (útil si DATABASE_PATH apunta
-    # a un disco montado tipo /var/data/cartas.db)
-    carpeta = os.path.dirname(DATABASE_PATH)
-    if carpeta and not os.path.exists(carpeta):
-        os.makedirs(carpeta, exist_ok=True)
-
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = libsql.connect(database=TURSO_DATABASE_URL, auth_token=TURSO_AUTH_TOKEN)
     conn.execute('''
         CREATE TABLE IF NOT EXISTS cartas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,10 +87,11 @@ def escribir_carta():
 @app.route('/cartas')
 def ver_cartas():
     db = get_db()
+    columnas = ['id', 'titulo', 'contenido', 'fecha', 'creada_en']
     filas = db.execute(
         'SELECT id, titulo, contenido, fecha, creada_en FROM cartas ORDER BY fecha DESC, id DESC'
     ).fetchall()
-    cartas = [dict(fila) for fila in filas]
+    cartas = [dict(zip(columnas, fila)) for fila in filas]
     return render_template('cartas.html', cartas=cartas)
 
 
