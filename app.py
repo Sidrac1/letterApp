@@ -1,26 +1,56 @@
-from flask import Flask, request, redirect, url_for, render_template
-import json
+from flask import Flask, request, redirect, url_for, render_template, g
+import sqlite3
 import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-DATA_FILE = os.path.join(os.path.dirname(__file__), 'cartas.json')
+# En local guarda cartas.db junto al código.
+# En Render, si montas un Disk persistente, apunta DATABASE_PATH a esa ruta
+# (ej. variable de entorno DATABASE_PATH=/var/data/cartas.db) para que las
+# cartas no se pierdan en cada redeploy.
+DATABASE_PATH = os.environ.get(
+    'DATABASE_PATH',
+    os.path.join(os.path.dirname(__file__), 'cartas.db')
+)
 
 
-def cargar_cartas():
-    if not os.path.exists(DATA_FILE):
-        return []
-    with open(DATA_FILE, 'r', encoding='utf-8') as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return []
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DATABASE_PATH)
+        g.db.row_factory = sqlite3.Row
+    return g.db
 
 
-def guardar_cartas(cartas):
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
-        json.dump(cartas, f, ensure_ascii=False, indent=2)
+@app.teardown_appcontext
+def cerrar_db(exception=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+
+def inicializar_db():
+    # Crea la carpeta contenedora si no existe (útil si DATABASE_PATH apunta
+    # a un disco montado tipo /var/data/cartas.db)
+    carpeta = os.path.dirname(DATABASE_PATH)
+    if carpeta and not os.path.exists(carpeta):
+        os.makedirs(carpeta, exist_ok=True)
+
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS cartas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            contenido TEXT NOT NULL,
+            fecha TEXT NOT NULL,
+            creada_en TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+
+inicializar_db()
 
 
 @app.route('/')
@@ -46,18 +76,15 @@ def escribir_carta():
             error = 'Escribe algo antes de enviar la carta 💌'
         else:
             fecha = fecha_form if fecha_form else datetime.now().strftime('%Y-%m-%d')
+            titulo_final = titulo if titulo else 'Sin título'
+            creada_en = datetime.now().isoformat()
 
-            cartas = cargar_cartas()
-            nuevo_id = 1 if not cartas else max(c['id'] for c in cartas) + 1
-            nueva_carta = {
-                'id': nuevo_id,
-                'titulo': titulo if titulo else 'Sin título',
-                'contenido': contenido,
-                'fecha': fecha,
-                'creada_en': datetime.now().isoformat()
-            }
-            cartas.append(nueva_carta)
-            guardar_cartas(cartas)
+            db = get_db()
+            db.execute(
+                'INSERT INTO cartas (titulo, contenido, fecha, creada_en) VALUES (?, ?, ?, ?)',
+                (titulo_final, contenido, fecha, creada_en)
+            )
+            db.commit()
             enviado = True
 
     return render_template('escribir.html', enviado=enviado, error=error)
@@ -69,9 +96,12 @@ def escribir_carta():
 # ------------------------------------------------------------------
 @app.route('/cartas')
 def ver_cartas():
-    cartas = cargar_cartas()
-    cartas_ordenadas = sorted(cartas, key=lambda c: c['fecha'], reverse=True)
-    return render_template('cartas.html', cartas=cartas_ordenadas)
+    db = get_db()
+    filas = db.execute(
+        'SELECT id, titulo, contenido, fecha, creada_en FROM cartas ORDER BY fecha DESC, id DESC'
+    ).fetchall()
+    cartas = [dict(fila) for fila in filas]
+    return render_template('cartas.html', cartas=cartas)
 
 
 if __name__ == '__main__':
